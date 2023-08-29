@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS a.b AS SELECT "a","b" FROM (values(0,0 )) as t("a","b");
