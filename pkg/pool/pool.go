@@ -23,9 +23,6 @@ func DivideQueries(threads int, queries []string) (queriesByThread [][]string, e
 	if threads == 0 {
 		return queriesByThread, errors.New("unable to have 0 threads")
 	}
-	if len(queries) == 0 {
-		return queriesByThread, errors.New("unable to have 0 queries")
-	}
 	if threads > len(queries) {
 		return queriesByThread, fmt.Errorf("unable to have more threads (%v) than queries (%v)", threads, len(queries))
 	}

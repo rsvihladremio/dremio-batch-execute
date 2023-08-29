@@ -82,7 +82,7 @@ func Execute(args Args) error {
 	}
 	queryPool, err := pool.DivideQueries(args.Threads, queries)
 	if err != nil {
-		return fmt.Errorf("unable to divide queries among threads %v", err)
+		return err
 	}
 
 	if err := process.Execute(eng, args.SleepTime, args.ProgressFilePath, queryPool); err != nil {

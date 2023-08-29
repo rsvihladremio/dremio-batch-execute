@@ -70,7 +70,7 @@ func TestExecute(t *testing.T) {
 	defer cleanup(t)
 	setup(t)
 	srcFile := "testdata/queries.sql"
-	progressFile := filepath.Join(t.TempDir(), "progress.txt")
+	progressFile := filepath.Join(t.TempDir(), "progress-default.txt")
 	err := Execute(Args{
 		RestAPIUsername:  "dremio",
 		RestAPIPassword:  "dremio123",
@@ -102,7 +102,7 @@ func TestExecuteWithThreads(t *testing.T) {
 	setup(t)
 
 	srcFile := "testdata/threading/queries.sql"
-	progressFile := filepath.Join(t.TempDir(), "progress.txt")
+	progressFile := filepath.Join(t.TempDir(), "progress-threads.txt")
 	err := Execute(Args{
 		RestAPIUsername:  "dremio",
 		RestAPIPassword:  "dremio123",
@@ -148,7 +148,7 @@ func TestExecuteWithResume(t *testing.T) {
 	defer cleanup(t)
 	setup(t)
 	srcFile := "testdata/resume/queries.sql"
-	progressFile := filepath.Join(t.TempDir(), "progress.txt")
+	progressFile := filepath.Join(t.TempDir(), "progress-resume.txt")
 	err := Execute(Args{
 		RestAPIUsername:  "dremio",
 		RestAPIPassword:  "dremio123",
