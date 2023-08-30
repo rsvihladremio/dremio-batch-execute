@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# scripts/release-build: build binaries in all supported platforms
+
+echo "Checking if zip is installed…"
+date "+%H:%M:%S"
+BIN_NAME="dremio-batch-execute"
+
+if ! type "zip" > /dev/null; then
+    echo "zip not found installing…"
+    date "+%H:%M:%S"
+    OS="`uname`"
+    case $OS in
+      'Linux')
+        if type "apt" > /dev/null; then
+            echo "detected debian based system installing via apt"
+            sudo apt install zip
+        fi
+        if type "yum" > /dev/null; then
+            echo "detected rpm based system installing via yum"
+            sudo yum install zip
+        fi
+        ;;
+      'WindowsNT')
+        echo "install gnu zip and try again http://gnuwin32.sourceforge.net/packages/zip.htm"
+        exit 1
+        ;;
+      'Darwin') 
+        if type "brew" > /dev/null; then
+            brew install zip
+        else
+            echo "install homebrew to have zip https://brew.sh/"
+            exit 1
+        fi
+        ;;
+      *) ;;
+      esac
+fi
+# this is also set in script/build and is a copy paste
+GIT_SHA=`git rev-parse --short HEAD`
+VERSION=$1
+LDFLAGS="-X github.com/rsvihladremio/$BIN_NAME/pkg/output.GitSha=$GIT_SHA -X github.com/rsvihladremio/$BIN_NAME/pkg/output.Version=$VERSION"
+
+echo "Cleaning bin folder…"
+date "+%H:%M:%S"
+./scripts/clean
+
+echo "Building linux-amd64…"
+date "+%H:%M:%S"
+GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME ./cmd/$BIN_NAME/
+zip ./bin/$BIN_NAME-linux-amd64.zip ./bin/$BIN_NAME
+echo "Building linux-arm64…"
+date "+%H:%M:%S"
+GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME ./cmd/$BIN_NAME/
+zip ./bin/$BIN_NAME-linux-arm64.zip ./bin/$BIN_NAME
+echo "Building darwin-os-x-amd64…"
+date "+%H:%M:%S"
+GOOS=darwin GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME ./cmd/$BIN_NAME/
+zip ./bin/$BIN_NAME-darwin-amd64.zip ./bin/$BIN_NAME
+echo "Building darwin-os-x-arm64…"
+date "+%H:%M:%S"
+GOOS=darwin GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME ./cmd/$BIN_NAME/
+zip ./bin/$BIN_NAME-darwin-arm64.zip ./bin/$BIN_NAME 
+echo "Building windows-amd64…"
+date "+%H:%M:%S"
+GOOS=windows GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME.exe ./cmd/$BIN_NAME/
+zip ./bin/$BIN_NAME-windows-amd64.zip ./bin/$BIN_NAME.exe
+echo "Building windows-arm64…"
+date "+%H:%M:%S"
+GOOS=windows GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME.exe ./cmd/$BIN_NAME/
+zip ./bin/$BIN_NAME-windows-arm64.zip ./bin/$BIN_NAME.exe 

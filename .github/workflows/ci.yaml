@@ -1,4 +1,4 @@
-name: CI Workflow
+name: Build Status
 
 on: [push]
 
@@ -17,13 +17,15 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build, Setup
-      run: sudo apt -y install golang
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
 
     - name: Verify build
-      run: ./script/build
+      run: ./scripts/build
 
     - name: Run tests
-      run: ./script/test
+      run: sleep 70 && ./scripts/test && ./scripts/cover
 
     - name: Run linting
-      run: ./script/lint
+      run: ./scripts/lint

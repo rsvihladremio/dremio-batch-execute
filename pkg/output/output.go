@@ -10,7 +10,7 @@ import (
 )
 
 var Version = "dev"
-var Sha256 = "unknown"
+var GitSha = "unknown"
 
 type QueryResults struct {
 	Completed int
@@ -25,7 +25,7 @@ func LogQueriesCompleted(q QueryResults) {
 }
 
 func LogStartMessage(args conf.Args) error {
-	log.Printf("dbe version: %v-%v", Version, Sha256)
+	log.Printf("dbe version: %v-%v", Version, GitSha)
 	log.Printf("parameters")
 	log.Printf("----------")
 	fullSourcePath, err := filepath.Abs(args.SourceQueryFile)
