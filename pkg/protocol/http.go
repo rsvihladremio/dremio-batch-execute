@@ -38,12 +38,70 @@ type HTTPProtocolEngine struct {
 	client              http.Client
 	queryTimeoutMinutes int
 	queryURL            string
+	sourceURL           string
 	queryStatusURL      string
 }
 
 // Name of the protocol
 func (h *HTTPProtocolEngine) Name() string {
 	return "HTTP"
+}
+
+func (h *HTTPProtocolEngine) MakeSource(sourceName string) error {
+	jsonBody := fmt.Sprintf(`{
+		"metadataPolicy": {       
+			"authTTLMs":86400000,
+			"namesRefreshMs":3600000,
+			"datasetRefreshAfterMs": 3600000,
+			"datasetExpireAfterMs": 10800000,
+			"datasetUpdateMode":"PREFETCH_QUERIED",
+			"deleteUnavailableDatasets": true,
+			"autoPromoteDatasets": true
+			},
+		"entityType": "source",
+		"type": "NAS",
+		"config": {"path": "/tmp/"},
+		"name": "%v"
+	}
+`, sourceName)
+	req, err := http.NewRequest(http.MethodPost, h.sourceURL, bytes.NewBuffer([]byte(jsonBody)))
+	if err != nil {
+		return fmt.Errorf("unable to create request %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", h.token)
+
+	res, err := h.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed sending login request: %w", err)
+	}
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("could not read response body: %w", err)
+	}
+	var resultMap map[string]interface{}
+	err = json.Unmarshal(resBody, &resultMap)
+	if err != nil {
+		return fmt.Errorf("could not read %v json %w", string(resBody), err)
+	}
+
+	v, ok := resultMap["id"]
+	if ok {
+		token := fmt.Sprintf("%v", v)
+		if token == "" {
+			return errors.New("blank id cannot proceed")
+		}
+		// TODO: add stats on job status at some point
+		lastState, err := h.checkQueryStatus(fmt.Sprintf("%v", v))
+		if err != nil {
+			return err
+		}
+		if lastState != "COMPLETED" {
+			return fmt.Errorf("failed with state of %v", lastState)
+		}
+		return nil
+	}
+	return fmt.Errorf("no job id in response %#v so failing the query", resultMap)
 }
 
 func (h *HTTPProtocolEngine) Execute(query string) error {
@@ -151,6 +209,7 @@ func NewHTTPEngine(a conf.ProtocolArgs) (*HTTPProtocolEngine, error) {
 	return &HTTPProtocolEngine{
 		token:               fmt.Sprintf("_dremio%v", token),
 		queryURL:            fmt.Sprintf("%v/api/v3/sql", a.URL),
+		sourceURL:           fmt.Sprintf("%v/api/v3/catalog", a.URL),
 		queryStatusURL:      fmt.Sprintf("%v/api/v3/job", a.URL),
 		client:              client,
 		queryTimeoutMinutes: 60,

@@ -25,7 +25,7 @@ jobs:
       run: ./scripts/build
 
     - name: Run tests
-      run: ./scripts/test
+      run: ./scripts/test && ./scripts/cover
 
     - name: Run linting
       run: ./scripts/lint

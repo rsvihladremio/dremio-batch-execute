@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/rsvihladremio/dremio-batch-execute/pkg/conf"
+	"github.com/rsvihladremio/dremio-batch-execute/pkg/protocol"
 )
 
 func cleanup(t *testing.T) {
@@ -51,14 +52,30 @@ func cleanup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cleanup failure: %v", err)
 	}
+
 }
 
 func setup(t *testing.T) {
 	t.Helper()
+	eng, err := protocol.NewHTTPEngine(conf.ProtocolArgs{
+		User:     "dremio",
+		Password: "dremio123",
+		URL:      "http://localhost:9047",
+		Timeout:  time.Second * 5,
+		SkipSSL:  true,
+	})
+	if err != nil {
+		t.Fatalf("cleanup failure on new http engine: %v", err)
+	}
+	if err := eng.MakeSource("a"); err != nil {
+		t.Fatalf("cleanup failure on new http engine: %v", err)
+	}
+	time.Sleep(100 * time.Millisecond)
+
 	srcFile := "testdata/create.sql"
 
 	progressFile := filepath.Join(t.TempDir(), "progress-create.txt")
-	err := Execute(conf.Args{
+	err = Execute(conf.Args{
 		DremioUsername:   "dremio",
 		DremioPassword:   "dremio123",
 		DremioURL:        "http://localhost:9047",
@@ -72,6 +89,7 @@ func setup(t *testing.T) {
 		t.Fatal(err)
 	}
 	time.Sleep(500 * time.Millisecond)
+
 }
 
 func TestExecute(t *testing.T) {
