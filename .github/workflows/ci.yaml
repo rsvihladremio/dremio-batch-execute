@@ -22,10 +22,10 @@ jobs:
         go-version: '1.21'
 
     - name: Verify build
-      run: ./script/build
+      run: ./scripts/build
 
     - name: Run tests
-      run: ./script/test
+      run: ./scripts/test
 
     - name: Run linting
-      run: ./script/lint
+      run: ./scripts/lint
