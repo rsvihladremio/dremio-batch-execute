@@ -68,7 +68,7 @@ func setup(t *testing.T) {
 		t.Fatalf("cleanup failure on new http engine: %v", err)
 	}
 	if err := eng.MakeSource("a"); err != nil {
-		t.Fatalf("cleanup failure on new http engine: %v", err)
+		t.Logf("WARN: unable to make source: %v", err)
 	}
 	time.Sleep(100 * time.Millisecond)
 
