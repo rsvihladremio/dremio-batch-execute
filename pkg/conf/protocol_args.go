@@ -16,6 +16,18 @@ package conf
 
 import "time"
 
+type Args struct {
+	DremioUsername   string
+	DremioPassword   string
+	DremioURL        string
+	HTTPTimeout      time.Duration
+	RequestSleepTime time.Duration
+	RequestThreads   int
+	SourceQueryFile  string
+	ProgressFilePath string
+	BatchSize        int
+}
+
 // ProtocolArgs provides a way to configure the communication protocol
 type ProtocolArgs struct {
 	User     string        // User for Dremio to ues to execute the queries in stress.json

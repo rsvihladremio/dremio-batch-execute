@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/rsvihladremio/dremio-batch-execute/pkg/conf"
 )
 
 // ReadQueries reads the query file and extracts sql queries from it, each query must end with a ';'
@@ -33,29 +35,55 @@ func ReadQueries(sourceQueryFile string) (queries []string, err error) {
 	const maxLineLength = 1024 * 1024
 	buf := make([]byte, maxLineLength)
 	scanner.Buffer(buf, maxLineLength)
-	existingSql := ""
+	var existingSql strings.Builder
 	for scanner.Scan() {
 		line := scanner.Text()
-		existingSql += line
+		if _, err := existingSql.WriteString(line); err != nil {
+			return []string{}, err
+		}
 		if strings.HasSuffix(line, ";") {
 			//statement now complete
-			queries = append(queries, existingSql)
-			existingSql = ""
+			queries = append(queries, existingSql.String())
+			existingSql.Reset()
 		} else {
-			existingSql += "\n"
+			if _, err := existingSql.WriteString("\n"); err != nil {
+				return []string{}, err
+			}
 		}
 	}
 	return
 }
 
-func ReadQueriesWithProgressFileFiltering(sourceQueryFile, progressFilePath string) (queries []string, err error) {
-	queriesInSourceFile, err := ReadQueries(sourceQueryFile)
+func GroupStatements(queries []string, batchSize int) ([]string, error) {
+	var batched []string
+	var currentBatch strings.Builder
+	for i, q := range queries {
+		if _, err := currentBatch.WriteString(q); err != nil {
+			return []string{}, err
+		}
+		if _, err := currentBatch.WriteString("\n"); err != nil {
+			return []string{}, err
+		}
+		if i%batchSize == 0 {
+			batched = append(batched, currentBatch.String())
+			currentBatch.Reset()
+		}
+	}
+	if currentBatch.Len() > 0 {
+		batched = append(batched, currentBatch.String())
+		currentBatch.Reset()
+	}
+	return batched, nil
+}
+
+func ReadQueriesWithProgressFileFiltering(args conf.Args) (queries []string, err error) {
+	queriesInSourceFile, err := ReadQueries(args.SourceQueryFile)
 	if err != nil {
 		return
 	}
 	var completedQueries []string
-	if _, statErr := os.Stat(progressFilePath); statErr == nil {
-		completedQueries, err = ReadQueries(progressFilePath)
+	if _, statErr := os.Stat(args.ProgressFilePath); statErr == nil {
+		completedQueries, err = ReadQueries(args.ProgressFilePath)
 		if err != nil {
 			return
 		}
@@ -74,7 +102,13 @@ func ReadQueriesWithProgressFileFiltering(sourceQueryFile, progressFilePath stri
 		}
 	}
 	if len(queriesInSourceFile) > 0 && len(queries) == 0 {
-		err = fmt.Errorf("all queries in file %v have already been completed according to the file %v. If this is undesirable delete the file %v and try again", sourceQueryFile, progressFilePath, progressFilePath)
+		err = fmt.Errorf("all queries in file %v have already been completed according to the file %v. If this is undesirable delete the file %v and try again", args.SourceQueryFile, args.ProgressFilePath, args.ProgressFilePath)
+	}
+	if args.BatchSize > 1 {
+		queries, err = GroupStatements(queries, args.BatchSize)
+		if err != nil {
+			return
+		}
 	}
 	return
 }

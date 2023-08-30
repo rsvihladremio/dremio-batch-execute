@@ -1,0 +1,29 @@
+name: CI Workflow
+
+on: [push]
+
+jobs:
+  build-and-run:
+
+    services:
+      dremio:
+        image: ghcr.io/rsvihladremio/dremio-oss-test-image:0.1.0
+        ports:
+          - 9047:9047
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build, Setup
+      run: sudo apt -y install golang
+
+    - name: Verify build
+      run: ./script/build
+
+    - name: Run tests
+      run: ./script/test
+
+    - name: Run linting
+      run: ./script/lint

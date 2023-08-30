@@ -16,6 +16,7 @@ package main
 
 import (
 	"bufio"
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -23,6 +24,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/rsvihladremio/dremio-batch-execute/pkg/conf"
 )
 
 func cleanup(t *testing.T) {
@@ -30,18 +33,23 @@ func cleanup(t *testing.T) {
 	srcFile := "testdata/delete.sql"
 
 	progressFile := filepath.Join(t.TempDir(), "progress-delete.txt")
-	err := Execute(Args{
-		RestAPIUsername:  "dremio",
-		RestAPIPassword:  "dremio123",
-		RestAPIURL:       "http://localhost:9047",
-		RestHTTPTimeout:  time.Second * 5,
-		SleepTime:        time.Millisecond * 1,
-		Threads:          1,
+	defer func() {
+		if err := os.Remove(progressFile); err != nil {
+			log.Printf("WARN: unable to remove progress file `%v` with error: %v", progressFile, err)
+		}
+	}()
+	err := Execute(conf.Args{
+		DremioUsername:   "dremio",
+		DremioPassword:   "dremio123",
+		DremioURL:        "http://localhost:9047",
+		HTTPTimeout:      time.Second * 5,
+		RequestSleepTime: time.Millisecond * 1,
+		RequestThreads:   1,
 		SourceQueryFile:  srcFile,
 		ProgressFilePath: progressFile,
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("cleanup failure: %v", err)
 	}
 }
 
@@ -50,13 +58,13 @@ func setup(t *testing.T) {
 	srcFile := "testdata/create.sql"
 
 	progressFile := filepath.Join(t.TempDir(), "progress-create.txt")
-	err := Execute(Args{
-		RestAPIUsername:  "dremio",
-		RestAPIPassword:  "dremio123",
-		RestAPIURL:       "http://localhost:9047",
-		RestHTTPTimeout:  time.Second * 5,
-		SleepTime:        time.Millisecond * 1,
-		Threads:          1,
+	err := Execute(conf.Args{
+		DremioUsername:   "dremio",
+		DremioPassword:   "dremio123",
+		DremioURL:        "http://localhost:9047",
+		HTTPTimeout:      time.Second * 5,
+		RequestSleepTime: time.Millisecond * 1,
+		RequestThreads:   1,
 		SourceQueryFile:  srcFile,
 		ProgressFilePath: progressFile,
 	})
@@ -71,13 +79,13 @@ func TestExecute(t *testing.T) {
 	setup(t)
 	srcFile := "testdata/queries.sql"
 	progressFile := filepath.Join(t.TempDir(), "progress-default.txt")
-	err := Execute(Args{
-		RestAPIUsername:  "dremio",
-		RestAPIPassword:  "dremio123",
-		RestAPIURL:       "http://localhost:9047",
-		RestHTTPTimeout:  time.Second * 5,
-		SleepTime:        time.Millisecond * 1,
-		Threads:          1,
+	err := Execute(conf.Args{
+		DremioUsername:   "dremio",
+		DremioPassword:   "dremio123",
+		DremioURL:        "http://localhost:9047",
+		HTTPTimeout:      time.Second * 5,
+		RequestSleepTime: time.Millisecond * 1,
+		RequestThreads:   1,
 		SourceQueryFile:  srcFile,
 		ProgressFilePath: progressFile,
 	})
@@ -103,13 +111,13 @@ func TestExecuteWithThreads(t *testing.T) {
 
 	srcFile := "testdata/threading/queries.sql"
 	progressFile := filepath.Join(t.TempDir(), "progress-threads.txt")
-	err := Execute(Args{
-		RestAPIUsername:  "dremio",
-		RestAPIPassword:  "dremio123",
-		RestAPIURL:       "http://localhost:9047",
-		RestHTTPTimeout:  time.Second * 5,
-		SleepTime:        time.Millisecond * 1,
-		Threads:          4,
+	err := Execute(conf.Args{
+		DremioUsername:   "dremio",
+		DremioPassword:   "dremio123",
+		DremioURL:        "http://localhost:9047",
+		HTTPTimeout:      time.Second * 5,
+		RequestSleepTime: time.Millisecond * 1,
+		RequestThreads:   4,
 		SourceQueryFile:  srcFile,
 		ProgressFilePath: progressFile,
 	})
@@ -149,13 +157,13 @@ func TestExecuteWithResume(t *testing.T) {
 	setup(t)
 	srcFile := "testdata/resume/queries.sql"
 	progressFile := filepath.Join(t.TempDir(), "progress-resume.txt")
-	err := Execute(Args{
-		RestAPIUsername:  "dremio",
-		RestAPIPassword:  "dremio123",
-		RestAPIURL:       "http://localhost:9047",
-		RestHTTPTimeout:  time.Second * 5,
-		SleepTime:        time.Millisecond * 1,
-		Threads:          1,
+	err := Execute(conf.Args{
+		DremioUsername:   "dremio",
+		DremioPassword:   "dremio123",
+		DremioURL:        "http://localhost:9047",
+		HTTPTimeout:      time.Second * 5,
+		RequestSleepTime: time.Millisecond * 1,
+		RequestThreads:   1,
 		SourceQueryFile:  srcFile,
 		ProgressFilePath: progressFile,
 	})

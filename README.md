@@ -10,7 +10,7 @@ Batch run Dremio a list of queries with limits on throughput, concurrency and su
 ```bash
 dremio-batch-execute -h
 Usage of dremio-batch-execute:
-  -pass string
+ -pass string
     	Password for -user (default "dremio123")
   -query-progress-file string
     	the file that logs all completed queries, will prevent completed queries in the source file from being retried. Multiple invocations of dremio-batch-execute for the same progress file may result in corruption (default "queries-completed.txt")
@@ -28,7 +28,7 @@ Usage of dremio-batch-execute:
     	User to use for operations (default "dremio")
 ```
 
-### sql file
+### SQL file
 
 For this version each query must be terminated with a ; and can span multiple lines. However, multiple statements per line is NOT currently supported
 

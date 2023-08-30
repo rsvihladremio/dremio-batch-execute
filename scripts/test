@@ -1,0 +1,4 @@
+#!/bin/sh
+
+go test -race -cover -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out

@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/rsvihladremio/dremio-batch-execute/pkg/conf"
+	"github.com/rsvihladremio/dremio-batch-execute/pkg/output"
 	"github.com/rsvihladremio/dremio-batch-execute/pkg/parser"
 	"github.com/rsvihladremio/dremio-batch-execute/pkg/pool"
 	"github.com/rsvihladremio/dremio-batch-execute/pkg/process"
@@ -34,58 +35,52 @@ func main() {
 	restHTTPTimeout := flag.Duration("request-timeout", time.Minute*1, "request timeout")
 	sleepTime := flag.Duration("request-sleep-time", time.Second*1, "duration to wait after query is done to mark it as complete, this can also be used to keep from overwhelming a server")
 	threads := flag.Int("threads", 1, "number of threads to execute at once, by default 1 is recommended")
+	// commenting batch size until we implement odbc, we can just set a default value for the meantime
+	// batchSize := flag.Int("batch-size", 1, "number of sql statements to execute at once")
+	batchSize := 1
 	sourceQueryFile := flag.String("source-file", "queries.sql", "file with a list of queries to execute. Each query must be terminated by a ; or be on only one line. Queries must be unique for resume support to work correctly")
 	progressFilePath := flag.String("query-progress-file", "queries-completed.txt", "the file that logs all completed queries, will prevent completed queries in the source file from being retried. Multiple invocations of dremio-batch-execute for the same progress file may result in corruption")
 	flag.Parse()
-
-	if err := Execute(Args{
-		RestAPIUsername:  *restAPIUsername,
-		RestAPIPassword:  *restAPIPassword,
-		RestAPIURL:       *restAPIURL,
-		RestHTTPTimeout:  *restHTTPTimeout,
-		SleepTime:        *sleepTime,
-		Threads:          *threads,
+	args := conf.Args{
+		DremioUsername:   *restAPIUsername,
+		DremioPassword:   *restAPIPassword,
+		DremioURL:        *restAPIURL,
+		HTTPTimeout:      *restHTTPTimeout,
+		RequestSleepTime: *sleepTime,
+		RequestThreads:   *threads,
 		SourceQueryFile:  *sourceQueryFile,
 		ProgressFilePath: *progressFilePath,
-	}); err != nil {
+		BatchSize:        batchSize,
+	}
+	output.LogStartMessage(args)
+	if err := Execute(args); err != nil {
 		log.Fatal(err)
 	}
 }
 
-type Args struct {
-	RestAPIUsername  string
-	RestAPIPassword  string
-	RestAPIURL       string
-	RestHTTPTimeout  time.Duration
-	SleepTime        time.Duration
-	Threads          int
-	SourceQueryFile  string
-	ProgressFilePath string
-}
-
-func Execute(args Args) error {
+func Execute(args conf.Args) error {
 	httpArgs := conf.ProtocolArgs{
-		User:     args.RestAPIUsername,
-		Password: args.RestAPIPassword,
-		URL:      args.RestAPIURL,
+		User:     args.DremioUsername,
+		Password: args.DremioPassword,
+		URL:      args.DremioURL,
 		SkipSSL:  true,
-		Timeout:  args.RestHTTPTimeout,
+		Timeout:  args.HTTPTimeout,
 	}
 	eng, err := protocol.NewHTTPEngine(httpArgs)
 	if err != nil {
 		return fmt.Errorf("unable to configure engine: %v", err)
 	}
 
-	queries, err := parser.ReadQueriesWithProgressFileFiltering(args.SourceQueryFile, args.ProgressFilePath)
+	queries, err := parser.ReadQueriesWithProgressFileFiltering(args)
 	if err != nil {
 		return fmt.Errorf("parsing error: %v", err)
 	}
-	queryPool, err := pool.DivideQueries(args.Threads, queries)
+	queryPool, err := pool.DivideQueries(args.RequestThreads, queries)
 	if err != nil {
 		return err
 	}
 
-	if err := process.Execute(eng, args.SleepTime, args.ProgressFilePath, queryPool); err != nil {
+	if err := process.Execute(eng, args.RequestSleepTime, args.ProgressFilePath, queryPool); err != nil {
 		return fmt.Errorf("process failure: %v", err)
 	}
 	return nil
