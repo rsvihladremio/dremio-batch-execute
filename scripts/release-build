@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# script/release-build: build binaries in all supported platforms
+# scripts/release-build: build binaries in all supported platforms
 
 echo "Checking if zip is installed…"
 date "+%H:%M:%S"
@@ -43,30 +43,29 @@ LDFLAGS="-X github.com/rsvihladremio/$BIN_NAME/pkg/output.GitSha=$GIT_SHA -X git
 
 echo "Cleaning bin folder…"
 date "+%H:%M:%S"
-./script/clean
-
+./scripts/clean
 
 echo "Building linux-amd64…"
 date "+%H:%M:%S"
-GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME
+GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME ./cmd/$BIN_NAME/
 zip ./bin/$BIN_NAME-linux-amd64.zip ./bin/$BIN_NAME
 echo "Building linux-arm64…"
 date "+%H:%M:%S"
-GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME
+GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME ./cmd/$BIN_NAME/
 zip ./bin/$BIN_NAME-linux-arm64.zip ./bin/$BIN_NAME
 echo "Building darwin-os-x-amd64…"
 date "+%H:%M:%S"
-GOOS=darwin GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME
+GOOS=darwin GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME ./cmd/$BIN_NAME/
 zip ./bin/$BIN_NAME-darwin-amd64.zip ./bin/$BIN_NAME
 echo "Building darwin-os-x-arm64…"
 date "+%H:%M:%S"
-GOOS=darwin GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME
+GOOS=darwin GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME ./cmd/$BIN_NAME/
 zip ./bin/$BIN_NAME-darwin-arm64.zip ./bin/$BIN_NAME 
 echo "Building windows-amd64…"
 date "+%H:%M:%S"
-GOOS=windows GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME.exe
+GOOS=windows GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME.exe ./cmd/$BIN_NAME/
 zip ./bin/$BIN_NAME-windows-amd64.zip ./bin/$BIN_NAME.exe
 echo "Building windows-arm64…"
 date "+%H:%M:%S"
-GOOS=windows GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME.exe
+GOOS=windows GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ./bin/$BIN_NAME.exe ./cmd/$BIN_NAME/
 zip ./bin/$BIN_NAME-windows-arm64.zip ./bin/$BIN_NAME.exe 
