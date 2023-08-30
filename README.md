@@ -1,5 +1,7 @@
 # dremio-batch-execute
 
+[![build](https://github.com/rsvihladremio/dremio-batch-execute/actions/workflows/ci.yaml/badge.svg)](https://github.com/rsvihladremio/dremio-batch-execute/actions/workflows/ci.yaml)
+
 Batch run Dremio a list of queries with limits on throughput, concurrency and support for resuming
 
 ## How to run
