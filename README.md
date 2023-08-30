@@ -32,5 +32,16 @@ Usage of dremio-batch-execute:
 
 ### SQL file
 
-For this version each query must be terminated with a ; and can span multiple lines. However, multiple statements per line is NOT currently supported
+Below is an example file:
 
+```sql
+INSERT INTO a.b VALUES(1, 2);
+INSERT INTO a.b VALUES(1, 3);
+INSERT INTO 
+    a.b 
+VALUES(1, 4);
+INSERT INTO a.b VALUES(1, 5);
+INSERT INTO a.b VALUES(1, 6);
+```
+
+Note how every statement ends with a ';' and a statement can span multiple lines. The tool does not currently support multiple statements per line.
